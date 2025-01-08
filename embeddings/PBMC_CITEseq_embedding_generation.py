@@ -24,7 +24,7 @@ torch.set_float32_matmul_precision('medium')
 #########################
 
 run_nanotx_every = 2  # run nanoTx every x iterations
-dataset_fractions = np.logspace(-3, 0, 5)
+dataset_fractions = np.logspace(-3, 0, 6)
 
 # input arguments
 qual, r, N_dims = sys.argv[1:]
@@ -99,7 +99,7 @@ for i, frac in enumerate(tqdm(dataset_fractions, desc='fractions', position=1, l
     ### nanoTx ###
     ##############
     if i % run_nanotx_every == 0:
-        model = nanoTxformer(ad1, embed_size=512, num_heads=2, num_encoder_layers=6).cuda()
+        model = nanoTxformer(ad1, embed_size=128, num_heads=4, num_encoder_layers=2).cuda()
         train_losses, val_losses = train_model(model, ad1, epochs=10**4)
         emb = get_mean_pooled_embeddings(model, held_out).cpu().numpy()
         save_embeddings(emb, "nanoTxformer", frac)
