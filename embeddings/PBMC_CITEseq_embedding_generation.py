@@ -23,8 +23,8 @@ torch.set_float32_matmul_precision('medium')
 ### control variables ###
 #########################
 
-run_nanotx_every = 2  # run nanoTx every x iterations
-dataset_fractions = np.logspace(-3, 0, 6)
+run_nanotx_every = 3  # run nanoTx every x iterations
+dataset_fractions = np.logspace(-3, 0, 10)
 
 # input arguments
 qual, r, N_dims = sys.argv[1:]
