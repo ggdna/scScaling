@@ -1,3 +1,4 @@
+data/caltech101*
 *.h5ad
 *.npy
 *_epoch*.csv
