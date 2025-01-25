@@ -4,9 +4,9 @@ from . import tokenizer
 
 class nanoTxformer(nn.Module):
     def __init__(self, adata,  
-                 embed_size=32, 
-                 num_heads=1, 
-                 num_encoder_layers=3, 
+                 embed_size=128, 
+                 num_heads=2, 
+                 num_encoder_layers=2, 
                  num_decoder_layers=0, 
                  forward_expansion=4, 
                  dropout=0.1,):
@@ -19,16 +19,18 @@ class nanoTxformer(nn.Module):
         self.embedding = nn.Embedding(num_tokens, embed_size)
         self.positional_encoding = nn.Parameter(torch.zeros(1, max_length, embed_size))
 
-        self.transformer = nn.Transformer(
+        self.encoder_layer = nn.TransformerEncoderLayer(
             d_model=embed_size,
             nhead=num_heads,
-            num_encoder_layers=num_encoder_layers,
-            num_decoder_layers=num_decoder_layers,
             dim_feedforward=forward_expansion * embed_size,
             dropout=dropout,
             batch_first=True
         )
-        
+        self.transformer = nn.TransformerEncoder(
+            self.encoder_layer,
+            num_layers=num_encoder_layers
+        )
+                
         self.fc_out = nn.Linear(embed_size, num_tokens)
         self.dropout = nn.Dropout(dropout)
 
@@ -38,28 +40,44 @@ class nanoTxformer(nn.Module):
         # Embed and add positional encoding to the source and target sequences
         src_seq_len = src.shape[1]
         src = self.dropout(self.embedding(src) + self.positional_encoding[:, :src_seq_len, :])
-        output = self.transformer(src, src)
+        output = self.transformer(src)
         out = self.fc_out(output)
 
         return out
     
-    def mean_pooling(self, src):
+    def mean_pooling(self, src, layer_index=None):
         """
-        compute the mean-pooled embedding
-        
+        compute the mean-pooled embedding from a specified encoder layer.
+
         Args:
-        - src (torch.Tensor): Input sequence of tokens, shape (batch_size, seq_len).
-        
+        - src (torch.Tensor): input sequence of tokens, shape (batch_size, seq_len).
+        - layer_index (int, optional): index of the encoder layer to extract embeddings from. 
+        defaults to the last layer if None.
+
         Returns:
-        - mean_pooled (torch.Tensor): Mean-pooled embedding of shape (batch_size, embed_size).
+        - mean_pooled (torch.Tensor): mean-pooled embedding of shape (batch_size, embed_size).
         """
-        # Embed and add positional encoding to the source sequences
+        # embed and add positional encoding to the source sequence
         src_seq_len = src.shape[1]
         src = self.dropout(self.embedding(src) + self.positional_encoding[:, :src_seq_len, :])
 
-        transformer_output = self.transformer(src, src)
+        # pass through encoder
+        all_encoder_outputs = []  # to store outputs of all layers
+        x = src
+        for layer in self.transformer.layers:
+            x = layer(x)
+            all_encoder_outputs.append(x)
 
-        # mean pooling over the sequence dimension (dim=1)
-        mean_pooled = transformer_output.mean(dim=1)
-                
+        # if layer_index is None, use the last layer
+        if layer_index is None:
+            layer_index = len(all_encoder_outputs) - 1
+
+        # handle invalid layer index
+        if layer_index < 0 or layer_index >= len(all_encoder_outputs):
+            raise ValueError(f"layer_index {layer_index} is out of range. must be between 0 and {len(all_encoder_outputs) - 1}.")
+
+        # get embeddings from the specified layer and mean-pool over sequence dimension
+        selected_output = all_encoder_outputs[layer_index]
+        mean_pooled = selected_output.mean(dim=1)
+
         return mean_pooled

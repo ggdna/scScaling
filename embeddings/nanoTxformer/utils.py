@@ -1,6 +1,6 @@
 import torch
 
-def get_mean_pooled_embeddings(model, adata, chunk_size=10):
+def get_mean_pooled_embeddings(model, adata, chunk_size=10, layer_index=None):
     """
     Get mean-pooled embeddings for the entire dataset in chunks.
     
@@ -31,7 +31,7 @@ def get_mean_pooled_embeddings(model, adata, chunk_size=10):
             batch = tokenized_data[start_idx:end_idx]
 
             # Compute the mean-pooled embedding for the batch
-            mean_pooled = model.mean_pooling(batch)  # Shape: (batch_size, embed_size)
+            mean_pooled = model.mean_pooling(batch, layer_index=layer_index)  # Shape: (batch_size, embed_size)
 
             # Append the results
             all_mean_pooled.append(mean_pooled)

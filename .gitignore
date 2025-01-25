@@ -1,4 +1,5 @@
 data/caltech101*
+embeddings/PBMC_CITEseq/*.csv
 *.h5ad
 *.npy
 *_epoch*.csv
