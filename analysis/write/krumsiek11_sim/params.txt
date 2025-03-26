@@ -1,0 +1,9 @@
+model = krumsiek11
+tmax = 800
+branching = True
+nrRealizations = 10
+noiseObs = 100.0
+noiseDyn = 0.001
+step = 5
+seed = 0
+params_file = True
