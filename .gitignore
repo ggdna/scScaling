@@ -1,11 +1,13 @@
 data/caltech101*
+data/splatter/*
 embeddings/PBMC_CITEseq/*.csv
 *.h5ad
 *.npy
 *_epoch*.csv
 *held_out.csv
 embeddings/data*
-
+embeddings/Splatter*
+embeddings/Finetuned/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
